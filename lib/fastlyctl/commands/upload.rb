@@ -3,8 +3,10 @@ module FastlyCTL
     desc "upload", "Uploads VCL in the current directory to the service."
     method_option :version, :aliases => ["--v"]
     method_option :comment, :aliases => ["--c"]
+    method_option :service, :aliases => ["--s"]
+
     def upload
-      id = FastlyCTL::Utils.parse_directory
+      id = options[:service] || FastlyCTL::Utils.parse_directory
 
       abort "Could not parse service id from directory. Use -s <service> to specify, vcl download, then try again." unless id
 
@@ -96,12 +98,12 @@ module FastlyCTL
         elsif yes?("VCL #{v["name"]} does not currently exist on the service, would you like to create it?")
           v["new"] = true
           if !main_found
-            v["main"] = true 
+            v["main"] = true
             main_found = true
           end
           say(FastlyCTL::Utils.get_diff("", v["content"]))
           false
-        else 
+        else
           say("Not uploading #{v["name"]}")
           true
         end
