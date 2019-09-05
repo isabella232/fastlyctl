@@ -4,6 +4,8 @@ module FastlyCTL
     method_option :service, :aliases => ["--s"]
     method_option :version, :aliases => ["--v"]
     method_option :generated, :aliases => ["--g"]
+    method_option :destination, :aliases => ["--d"]
+
     def download(vcl_name=false)
       parsed_id = FastlyCTL::Utils.parse_directory
 
@@ -38,23 +40,28 @@ module FastlyCTL
         sname = sname.tr("/","_")
       end
 
-      folder_name = parsed ? "./" : "#{sname} - #{service["id"]}/"
-      Dir.mkdir(folder_name) unless (File.directory?(folder_name) || parsed)
+      parsed_name = parsed ? "./" : "#{sname} - #{service["id"]}/"
+      folder_name = options[:destination] || parsed_name
+
+      destination_path = File.expand_path(folder_name)
+
+      Dir.mkdir(destination_path) unless (File.directory?(folder_name) || parsed)
 
       if vcl
         vcl.each do |v,k|
           next if (vcl_name && vcl_name != v["name"])
 
-          filename = "#{folder_name}#{v["name"]}.vcl"
+          filename = "#{v["name"]}.vcl"
+          dest_file = File.join(destination_path, filename)
 
-          if File.exist?(filename)
-            unless yes?("Are you sure you want to overwrite #{filename}")
+          if File.exist?(dest_file)
+            unless yes?("Are you sure you want to overwrite #{dest_file}")
               say("Skipping #{filename}")
               next
             end
           end
 
-          File.open(filename, 'w+') {|f| f.write(v["content"]) }
+          File.open(dest_file, 'w+') {|f| f.write(v["content"]) }
 
           say("VCL content for version #{version} written to #{filename}")
         end
